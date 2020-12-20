@@ -1,3 +1,4 @@
+import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -17,32 +18,53 @@ browser = webdriver.Chrome(executable_path=webdriver_path, options=chrome_option
 # check numbers
 numbers = open('numbers.txt', 'r') 
 number_lines = numbers.readlines() 
-  
-processed = open("processed.txt", "w+")
-processed_lines = numbers.readlines() 
 
-founded = open("found.txt", "w+")
 count = 0
 # Strips the newline character 
 for number_line in number_lines:
     already_processed = False
+    
+    processed = open("processed.txt", "a+")
+    processed_lines = numbers.readlines() 
     for processed_line in processed_lines: 
         if number_line.strip() == processed_line.strip():
             already_processed = True
 
     if not already_processed:
-        process_num = number_line.strip()
-        processed.write(process_num + '\n')
-
         # goTo
-        browser.get('https://www2.trf4.jus.br/trf4/controlador.php?acao=consulta_processual_resultado_pesquisa&selForma=NU&txtValor=' + process_num + '&chkMostrarBaixados=&todasfases=&todosvalores=&todaspartes=&txtDataFase=01/01/1970&selOrigem=TRF&sistema=&hdnRefId=&txtPalavraGerada=&txtChave=&seq=')
+        process_num = number_line.strip()
+        cache = 'AoWZ&hdnRefId=59c123f6b15a945e56d932a09b009cce'
+        url = 'https://www2.trf4.jus.br/trf4/controlador.php?acao=consulta_processual_resultado_pesquisa&txtPalavraGerada=' + cache + '&selForma=NU&txtValor=' + process_num + '&chkMostrarBaixados=&todasfases=&todosvalores=&todaspartes=&txtDataFase=&selOrigem=TRF&sistema=&codigoparte=&txtChave=&paginaSubmeteuPesquisa=letras'
+        browser.get(url)
         content = browser.find_element_by_id('divConteudo')
         response = process_num
         if 'Lei 13.463/2017' in browser.page_source:
             response += ' OK!'
-            founded.write(process_num + ';\n')
+            content = browser.find_element_by_id('divConteudo').text
+
+            lines = ['Originário:', 'Originário:', 'Data de autuação:', 'Relator:', 'Órgão Julgador:', 'Órgão Atual:' , 'Situação:', 'Competência:', 'REQUERENTE:', 'Advogado:', 'REQUERIDO:']
+            text = process_num + ';'
+            for content_line in content.splitlines():
+                for line in lines:
+                    if line in content_line:
+                        text += content_line.strip() + ';'                        
+                        
+            founded = open("found.txt", "a+")
+            founded.write(text + '\n')
+            founded.close()
 
         print(response)
+
+        if 'Digite as letras no campo abaixo e clique em ' in browser.page_source:
+            print('Stoped by captcha!')
+            print(url)
+            processed.close()        
+            numbers.close()
+            processed.close()
+            sys.exit()
+    
+    processed.write(process_num + '\n')
+    processed.close()
 
 numbers.close()
 processed.close()
