@@ -1,4 +1,5 @@
 import sys
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,7 +17,8 @@ chrome_options.add_argument('--disable-browser-side-navigation')
 browser = webdriver.Chrome(executable_path=webdriver_path, options=chrome_options)
 
 # check numbers
-numbers = open('numbers.txt', 'r') 
+year = '2015'
+numbers = open(year + '.txt', 'r') 
 number_lines = numbers.readlines() 
 
 count = 0
@@ -24,8 +26,8 @@ count = 0
 for number_line in number_lines:
     already_processed = False
     
-    processed = open("processed.txt", "a+")
-    processed_lines = numbers.readlines() 
+    processed = open("processed_" + year + ".txt", "r+")
+    processed_lines = processed.readlines() 
     for processed_line in processed_lines: 
         if number_line.strip() == processed_line.strip():
             already_processed = True
@@ -33,23 +35,27 @@ for number_line in number_lines:
     if not already_processed:
         # goTo
         process_num = number_line.strip()
-        cache = 'AoWZ&hdnRefId=59c123f6b15a945e56d932a09b009cce'
+        cache = 'oUQc&hdnRefId=ec10031aee39e3926604e4d4e4e3a354'
         url = 'https://www2.trf4.jus.br/trf4/controlador.php?acao=consulta_processual_resultado_pesquisa&txtPalavraGerada=' + cache + '&selForma=NU&txtValor=' + process_num + '&chkMostrarBaixados=&todasfases=&todosvalores=&todaspartes=&txtDataFase=&selOrigem=TRF&sistema=&codigoparte=&txtChave=&paginaSubmeteuPesquisa=letras'
         browser.get(url)
         content = browser.find_element_by_id('divConteudo')
+        if not content:
+            continue
+
         response = process_num
         if 'Lei 13.463/2017' in browser.page_source:
             response += ' OK!'
             content = browser.find_element_by_id('divConteudo').text
 
-            lines = ['Originário:', 'Originário:', 'Data de autuação:', 'Relator:', 'Órgão Julgador:', 'Órgão Atual:' , 'Situação:', 'Competência:', 'REQUERENTE:', 'Advogado:', 'REQUERIDO:']
+            lines = ['Originário:', 'Originário:', 'Data de autuação:', 'Relator:', 'Órgão Julgador:', 'Órgão Atual:' , 'Situação:', 'Competência:', 'REQUERENTE:', 'Advogado', 'REQUERIDO:']
             text = process_num + ';'
             for content_line in content.splitlines():
                 for line in lines:
                     if line in content_line:
-                        text += content_line.strip() + ';'                        
-                        
-            founded = open("found.txt", "a+")
+                        found = True
+                        text += content_line.strip() + ';'
+                
+            founded = open("found_" + year + ".txt", "a+")
             founded.write(text + '\n')
             founded.close()
 
@@ -63,7 +69,7 @@ for number_line in number_lines:
             processed.close()
             sys.exit()
     
-    processed.write(process_num + '\n')
+    processed.write(number_line.strip() + '\n')
     processed.close()
 
 numbers.close()
