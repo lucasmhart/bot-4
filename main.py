@@ -17,7 +17,7 @@ chrome_options.add_argument('--disable-browser-side-navigation')
 browser = webdriver.Chrome(executable_path=webdriver_path, options=chrome_options)
 
 # check numbers
-year = '2015'
+year = '2018'
 numbers = open(year + '.txt', 'r') 
 number_lines = numbers.readlines() 
 
