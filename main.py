@@ -3,6 +3,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
+from progressbar import progressbar
 
 # web driver
 webdriver_path = 'driver/Linux/chromedriver'
@@ -17,13 +18,13 @@ chrome_options.add_argument('--disable-browser-side-navigation')
 browser = webdriver.Chrome(executable_path=webdriver_path, options=chrome_options)
 
 # check numbers
-year = '2018'
+year = '20122013'
 numbers = open(year + '.txt', 'r') 
 number_lines = numbers.readlines() 
 
 count = 0
 # Strips the newline character 
-for number_line in number_lines:
+for number_line in progressbar(number_lines):
     already_processed = False
     
     processed = open("processed_" + year + ".txt", "r+")
@@ -35,6 +36,7 @@ for number_line in number_lines:
     if not already_processed:
         # goTo
         process_num = number_line.strip()
+        processed.write(process_num + '\n')
         cache = 'oUQc&hdnRefId=ec10031aee39e3926604e4d4e4e3a354'
         url = 'https://www2.trf4.jus.br/trf4/controlador.php?acao=consulta_processual_resultado_pesquisa&txtPalavraGerada=' + cache + '&selForma=NU&txtValor=' + process_num + '&chkMostrarBaixados=&todasfases=&todosvalores=&todaspartes=&txtDataFase=&selOrigem=TRF&sistema=&codigoparte=&txtChave=&paginaSubmeteuPesquisa=letras'
         browser.get(url)
@@ -59,8 +61,6 @@ for number_line in number_lines:
             founded.write(text + '\n')
             founded.close()
 
-        print(response)
-
         if 'Digite as letras no campo abaixo e clique em ' in browser.page_source:
             print('Stoped by captcha!')
             print(url)
@@ -68,8 +68,7 @@ for number_line in number_lines:
             numbers.close()
             processed.close()
             sys.exit()
-    
-    processed.write(number_line.strip() + '\n')
+
     processed.close()
 
 numbers.close()
